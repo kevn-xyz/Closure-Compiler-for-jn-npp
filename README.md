@@ -1,4 +1,4 @@
-# Closure-Compiler-for-jn-npp
+# Closure Compiler for jn-npp
 A little script to minify the current view.  
 It opens a file with .min inserted before the last "." (eg. script.js -> script.min.js, script.1.5.6.js -> script.1.5.6.min.js).
 

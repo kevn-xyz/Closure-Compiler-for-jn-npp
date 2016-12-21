@@ -25,32 +25,32 @@
 		if (currentView.text.length > 0){
 			var xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
 			if (xmlHttp) {
-				xmlHttp.open('POST', 'https://closure-compiler.appspot.com/compile', true);
+				xmlHttp.open("POST", "https://closure-compiler.appspot.com/compile", true);
 				xmlHttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 				xmlHttp.onreadystatechange = function () {
 					if (xmlHttp.readyState == 4 && xmlHttp.responseText) {
 						try {
 							var responseObj = eval("("+xmlHttp.responseText+")");
 							if (typeof responseObj.serverErrors != "undefined") {
-								alert("The server returned an error.\nThe response will be printed to the oposite view.");
+								alert("The server returned an error.\nThe response will be printed to the oposite view.\n(Try clearing custom parameter)");
 								outputToOpositeView(JSON.stringify(responseObj, null, "\t"), "JSON");
 								return;
 							}
 							
 							if (globalCCSettings.so.returnStats) {
 								outputToOpositeView((function (statso) {
-										var rs = "";
-										for (var key in statso) {
-											rs += key + ": " + statso[key] + "\n";
-										}
-										rs += "\n" + ((statso.originalGzipSize / statso.compressedGzipSize - 1) * 100) + "% saved.";
-										return rs
-									})(responseObj.statistics));
+									var rs = "";
+									for (var key in statso) {
+										rs += key + ": " + statso[key] + "\n";
+									}
+									rs += "\n" + ((statso.originalGzipSize / statso.compressedGzipSize - 1) * 100) + "% saved.";
+									return rs;
+								})(responseObj.statistics));
 							}
 							
 							outputToMinFile(cFullFilename, responseObj.compiledCode);
 						} catch(e) {
-							alert("Error\n(Try clearing custom parameter)");
+							alert("Error");
 						}
 					}
 				};
@@ -69,7 +69,7 @@
 		} else {
 			alert("Nothing to minify");
 		}
-	}
+	};
 	
 	
 	/* 										MENU 									*/
@@ -107,7 +107,7 @@
 				compilation_level.MenuItems.push(
 					compilation_level.submenu.addItem({
 						text: compilation_level.names[i],
-						cmd: (function(i){ return function(){ compilation_level.setCompLvl(i); } })(i)
+						cmd: (function(i){ return function(){ compilation_level.setCompLvl(i); }; })(i)
 					})
 				);
 			}
@@ -127,24 +127,24 @@
 		init: function () {
 			otherSettings.menu = ccjsmin.addMenu("Other Settings");
 			otherSettings.returnStats = otherSettings.menu.addItem({
-					text: "Return Statistics",
-					cmd: function () {
-						otherSettings.returnStats.checked = !otherSettings.returnStats.checked;
-						globalCCSettings.so.returnStats = otherSettings.returnStats.checked;
-						globalCCSettings.update();
-					}
-				});
+				text: "Return Statistics",
+				cmd: function () {
+					otherSettings.returnStats.checked = !otherSettings.returnStats.checked;
+					globalCCSettings.so.returnStats = otherSettings.returnStats.checked;
+					globalCCSettings.update();
+				}
+			});
 			otherSettings.customParam = otherSettings.menu.addItem({
-					text: "Custom POST Param",
-					cmd: function () {
-						Dialog.prompt("Custom POST Parameter", globalCCSettings.so.customParam, function(ncustomParam){
-							globalCCSettings.so.customParam = ncustomParam;
-							globalCCSettings.update();
-						});	
-					}
-				});
+				text: "Custom POST Param",
+				cmd: function () {
+					Dialog.prompt("Custom POST Parameter", globalCCSettings.so.customParam, function(ncustomParam){
+						globalCCSettings.so.customParam = ncustomParam;
+						globalCCSettings.update();
+					});	
+				}
+			});
 		}
-	}
+	};
 	otherSettings.init();
 	
 	
@@ -178,7 +178,7 @@
 				globalCCSettings.update();
 			}
 		}
-	}
+	};
 	globalCCSettings.init();
 	
 	ccjsmin.addItem({

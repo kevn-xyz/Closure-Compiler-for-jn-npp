@@ -1,13 +1,12 @@
 (function(){
-	var ccjsmin = Editor.addMenu("ClosureCompiler");
-	
+		
 	function outputToMinFile(origfilen, text) {
 		var minFilename = origfilen.substring(0, origfilen.lastIndexOf(".")) + ".min" + origfilen.substring(origfilen.lastIndexOf("."));
 		open(minFilename);
 		
 		currentView.text = text;
 	}
-	function outputToOpositeView(text) {
+	function outputToOpositeView(text, lang) {
 		var view = currentView;
 		var file = view.file;
 		
@@ -16,6 +15,9 @@
 		MenuCmds.FORMAT_UTF_8();
 		
 		currentView.text = text;
+		if (lang) {
+			currentView.lang = (Editor.langs.indexOf(lang) == -1) ? 0 : Editor.langs.indexOf(lang); //setting currentView.lang to -1 seems to be fine but for safeties sake might aswell
+		}
 		view.file = file;
 	}
 	
@@ -29,28 +31,38 @@
 					if (xmlHttp.readyState == 4 && xmlHttp.responseText) {
 						try {
 							var responseObj = eval("("+xmlHttp.responseText+")");
+							if (typeof responseObj.serverErrors != "undefined") {
+								alert("The server returned an error.\nThe response will be printed to the oposite view.");
+								outputToOpositeView(JSON.stringify(responseObj, null, "\t"), "JSON");
+								return;
+							}
+							
 							if (globalCCSettings.so.returnStats) {
 								outputToOpositeView((function (statso) {
-										rs = "";
+										var rs = "";
 										for (var key in statso) {
-											rs += key + ": " + statso[key] + "\n"
+											rs += key + ": " + statso[key] + "\n";
 										}
-										rs += "\n" + ((statso.originalGzipSize / statso.compressedGzipSize - 1) * 100) + "% saved."
+										rs += "\n" + ((statso.originalGzipSize / statso.compressedGzipSize - 1) * 100) + "% saved.";
 										return rs
 									})(responseObj.statistics));
 							}
+							
 							outputToMinFile(cFullFilename, responseObj.compiledCode);
 						} catch(e) {
-							alert("Error");
+							alert("Error\n(Try clearing custom parameter)");
 						}
 					}
 				};
+				
 				var cFullFilename = Editor.currentView.files[Editor.currentView.file],
 					jstosend = "&js_code=" + encodeURIComponent(currentView.text),
 					params = "output_info=compiled_code&compilation_level="+ compilation_level.setting +"&output_format=json";
 				if (globalCCSettings.so.returnStats) { params = "output_info=statistics&" + params; }
+				params = globalCCSettings.so.customParam + params;
 				var uriargs = params + jstosend;
-				
+				//alert(params);
+				//alert(uriargs);
 				xmlHttp.send(uriargs);
 				alert("Sending request...");
 			}
@@ -62,6 +74,8 @@
 	
 	/* 										MENU 									*/
 	
+	
+	var ccjsmin = Editor.addMenu("ClosureCompiler");
 		
 	ccjsmin.addItem({
 		text:"Minify current view",
@@ -89,7 +103,7 @@
 		},
 		init: function() {
 			compilation_level.submenu = ccjsmin.addMenu("Compilation Level");
-			for (i=0;i<3;i++) {
+			for (var i=0;i<3;i++) {
 				compilation_level.MenuItems.push(
 					compilation_level.submenu.addItem({
 						text: compilation_level.names[i],
@@ -109,6 +123,7 @@
 			menu: null,
 			items: []
 		},
+		customParam: null,
 		init: function () {
 			otherSettings.menu = ccjsmin.addMenu("Other Settings");
 			otherSettings.returnStats = otherSettings.menu.addItem({
@@ -117,6 +132,15 @@
 						otherSettings.returnStats.checked = !otherSettings.returnStats.checked;
 						globalCCSettings.so.returnStats = otherSettings.returnStats.checked;
 						globalCCSettings.update();
+					}
+				});
+			otherSettings.customParam = otherSettings.menu.addItem({
+					text: "Custom POST Param",
+					cmd: function () {
+						Dialog.prompt("Custom POST Parameter", globalCCSettings.so.customParam, function(ncustomParam){
+							globalCCSettings.so.customParam = ncustomParam;
+							globalCCSettings.update();
+						});	
 					}
 				});
 		}
@@ -133,6 +157,11 @@
 		},
 		init: function () {
 			globalCCSettings.so = GlobalSettings.get("ClosureCompiler");
+			if (typeof globalCCSettings.so == "undefined" || typeof globalCCSettings.so == null) {
+				GlobalSettings.set("ClosureCompiler",{});
+				globalCCSettings.init();
+				return;
+			}
 			if (typeof globalCCSettings.so.compilation_levelVal != "undefined") {
 				compilation_level.setCompLvl(globalCCSettings.so.compilation_levelVal);
 			} else {
@@ -144,9 +173,20 @@
 				globalCCSettings.so.returnStats = false;
 				globalCCSettings.update();
 			}
+			if (typeof globalCCSettings.so.customParam == "undefined") {
+				globalCCSettings.so.customParam = "";
+				globalCCSettings.update();
+			}
 		}
 	}
 	globalCCSettings.init();
+	
+	ccjsmin.addItem({
+		text:"Reset settings",
+		cmd:function(){
+			GlobalSettings.set("ClosureCompiler",{});
+		}
+	});
 	
 	
 })();

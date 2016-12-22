@@ -72,7 +72,7 @@
 	};
 	
 	
-	/* 										MENU 									*/
+	/* 										MENU 										*/
 	
 	
 	var ccjsmin = Editor.addMenu("ClosureCompiler");
@@ -147,7 +147,7 @@
 	};
 	otherSettings.init();
 	
-	
+	/* 										GLOBAL SETTINGS 										*/
 	
 	var globalCCSettings = {
 		so: null,
@@ -174,7 +174,7 @@
 				globalCCSettings.update();
 			}
 			if (typeof globalCCSettings.so.customParam == "undefined") {
-				globalCCSettings.so.customParam = "";
+				globalCCSettings.so.customParam = "warning_level=QUIET&";
 				globalCCSettings.update();
 			}
 		}
@@ -185,6 +185,7 @@
 		text:"Reset settings",
 		cmd:function(){
 			GlobalSettings.set("ClosureCompiler",{});
+			globalCCSettings.update();
 		}
 	});
 	
